@@ -9,6 +9,8 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
 
     public CharacterController controller;
     public float speed = 6f;
+    float turnsmoothTime=0.1f;
+    float turnSmoothVel=2;
 
 
     void Start()
@@ -25,22 +27,43 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
         float vertiacal = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertiacal).normalized;
 
-        //GET AXIS MOUSE MOVEMENT 2AXIS BASED 
-        float MousedeltaX = Input.GetAxis("Mouse X");
-        float MousedeltaY = Input.GetAxis("Mouse Y");
-
+       
+       
 
        // CHARACTER Y ROTATION TO MOUSE
-        if (MousedeltaX>0.1f || MousedeltaY>0.1f)
+        if (Input.GetAxis("Mouse X") > 0.01f || Input.GetAxis("Mouse Y") > 0.01f)
         {
+         
+            Vector3 MousePos = Input.mousePosition;
+               // Camera.main.farClipPlane * .5f;
+            Vector3 MousePositionWorld = Camera.main.ScreenToWorldPoint(new Vector3(MousePos.x,MousePos.y,Camera.main.transform.position.y));
 
-            Vector3 MousePositionWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 DirectionToMouse = new Vector3(MousePositionWorld.x-transform.position.x,MousePositionWorld.y-transform.position.y,MousePositionWorld.z-transform.position.z).normalized;
-
-            float targetangle = Mathf.Atan2(DirectionToMouse.x, DirectionToMouse.z) *Mathf.Rad2Deg;
+            Debug.Log("MousePos:"+ MousePositionWorld);
+            Vector3 positionTolookAt = new Vector3(MousePositionWorld.x,0f, MousePositionWorld.z);
 
 
-            transform.rotation = Quaternion.Euler(0f,targetangle,0f);
+            Vector3 aux = positionTolookAt - transform.position;
+            float TargetAngle = Mathf.Atan2(aux.x, aux.z) * Mathf.Rad2Deg;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, TargetAngle, ref turnSmoothVel, turnsmoothTime);
+            transform.rotation = Quaternion.Euler(0f,angle,0f);
+
+            //OPTION1
+            //Quaternion currentRotation = transform.rotation;
+            //Quaternion targetRotation = Quaternion.LookRotation(positionTolookAt-transform.position);
+            //transform.rotation = Quaternion.Slerp(currentRotation,targetRotation,15f*Time.deltaTime);
+
+            //OPTION2
+            //float TargetAngle = Mathf.Atan2(positionTolookAt.x, positionTolookAt.z) *Mathf.Rad2Deg;
+            //transform.rotation = Quaternion.Euler(0f,TargetAngle,0f);
+
+            //OPTION3 On current use
+           // Vector3 aux = positionTolookAt - transform.position;
+            //float TargetAngle = Mathf.Atan2(aux.x, aux.z) * Mathf.Rad2Deg;
+            //transform.rotation = Quaternion.Euler(0f, TargetAngle, 0f);
+
+
+
+
         }
 
 
