@@ -52,29 +52,30 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
 
 
         }
-
-
-        /*
-        if (Input.GetButtonDown("Aim"))
+     
+        if (Input.GetButton("Aim"))
         {
-            Vector3 directionAimingVector = AimingPoint - transform.position;
-            Vector3 finalAimingPoint = directionAimingVector.normalized*(directionAimingVector.magnitude*aimingPercentageToPoint);
 
-            FollowGO.transform.position = finalAimingPoint;
+         
+            Debug.DrawRay(transform.position, AimingPoint, Color.green);
+            Vector3 directionToTarget = (AimingPoint - transform.position);
+            float ToTargetDistance = directionToTarget.magnitude;
+            FollowGO.transform.position = directionToTarget.normalized * (ToTargetDistance);
 
         }
         if (Input.GetButtonUp("Aim"))
         {
            
-
+            
             FollowGO.transform.position = transform.position;
 
         }
-        */
+
         if (direction.magnitude>=0.1f)
         {
 
            controller.Move(direction.normalized * speed * Time.deltaTime);
+           
 
         }
 
