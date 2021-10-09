@@ -8,14 +8,22 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
 
 
     public CharacterController controller;
+
+    public GameObject FollowGO;
+
     public float speed = 6f;
-    float turnsmoothTime=0.1f;
-    float turnSmoothVel=2;
 
-
+    [SerializeField]
+   private Vector3 AimingPoint;
+    [SerializeField]
+    private float aimingPercentageToPoint =25;
+  
     void Start()
     {
-        
+
+        aimingPercentageToPoint /= 100;
+        Debug.Log(aimingPercentageToPoint);
+
     }
 
     void Update()
@@ -27,50 +35,46 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
         float vertiacal = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertiacal).normalized;
 
-       
-       
 
-       // CHARACTER Y ROTATION TO MOUSE
-        if (Input.GetAxis("Mouse X") > 0.01f || Input.GetAxis("Mouse Y") > 0.01f)
+        Plane playerPlane = new Plane(Vector3.up,transform.position);
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        float hitDist =0f;
+
+        if(playerPlane.Raycast(ray, out hitDist))
         {
-         
-            Vector3 MousePos = Input.mousePosition;
-               // Camera.main.farClipPlane * .5f;
-            Vector3 MousePositionWorld = Camera.main.ScreenToWorldPoint(new Vector3(MousePos.x,MousePos.y,Camera.main.transform.position.y));
 
-            Debug.Log("MousePos:"+ MousePositionWorld);
-            Vector3 positionTolookAt = new Vector3(MousePositionWorld.x,0f, MousePositionWorld.z);
-
-
-            Vector3 aux = positionTolookAt - transform.position;
-            float TargetAngle = Mathf.Atan2(aux.x, aux.z) * Mathf.Rad2Deg;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, TargetAngle, ref turnSmoothVel, turnsmoothTime);
-            transform.rotation = Quaternion.Euler(0f,angle,0f);
-
-            //OPTION1
-            //Quaternion currentRotation = transform.rotation;
-            //Quaternion targetRotation = Quaternion.LookRotation(positionTolookAt-transform.position);
-            //transform.rotation = Quaternion.Slerp(currentRotation,targetRotation,15f*Time.deltaTime);
-
-            //OPTION2
-            //float TargetAngle = Mathf.Atan2(positionTolookAt.x, positionTolookAt.z) *Mathf.Rad2Deg;
-            //transform.rotation = Quaternion.Euler(0f,TargetAngle,0f);
-
-            //OPTION3 On current use
-           // Vector3 aux = positionTolookAt - transform.position;
-            //float TargetAngle = Mathf.Atan2(aux.x, aux.z) * Mathf.Rad2Deg;
-            //transform.rotation = Quaternion.Euler(0f, TargetAngle, 0f);
-
-
+            Vector3 targetPoint = ray.GetPoint(hitDist);
+            AimingPoint = targetPoint;
+            Quaternion targetRotation = Quaternion.LookRotation(targetPoint-transform.position);
+            targetRotation.x = 0;
+            targetRotation.z = 0;
+            transform.rotation = Quaternion.Slerp(transform.rotation,targetRotation,7f*Time.deltaTime);
 
 
         }
 
 
+        /*
+        if (Input.GetButtonDown("Aim"))
+        {
+            Vector3 directionAimingVector = AimingPoint - transform.position;
+            Vector3 finalAimingPoint = directionAimingVector.normalized*(directionAimingVector.magnitude*aimingPercentageToPoint);
+
+            FollowGO.transform.position = finalAimingPoint;
+
+        }
+        if (Input.GetButtonUp("Aim"))
+        {
+           
+
+            FollowGO.transform.position = transform.position;
+
+        }
+        */
         if (direction.magnitude>=0.1f)
         {
 
-           controller.Move(direction * speed * Time.deltaTime);
+           controller.Move(direction.normalized * speed * Time.deltaTime);
 
         }
 
@@ -82,4 +86,17 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
         
         
     }
+
+
+
+   
+
+
 }
+
+
+
+
+
+
+
