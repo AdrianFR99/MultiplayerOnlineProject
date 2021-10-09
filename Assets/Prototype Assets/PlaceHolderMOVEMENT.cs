@@ -15,14 +15,10 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
 
     [SerializeField]
    private Vector3 AimingPoint;
-    [SerializeField]
-    private float aimingPercentageToPoint =25;
+
   
     void Start()
     {
-
-        aimingPercentageToPoint /= 100;
-        Debug.Log(aimingPercentageToPoint);
 
     }
 
@@ -35,6 +31,9 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
         float vertiacal = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertiacal).normalized;
 
+
+
+        //ROTATE PLAYER TOWARDS MOUSE  WORLD POSITION   
 
         Plane playerPlane = new Plane(Vector3.up,transform.position);
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -53,17 +52,18 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
 
         }
      
-        if (Input.GetButton("Aim"))
+        //WHEN AIMING SET FOLLOWGO GAMEOBJECT TO TARGET
+        if (Input.GetKey(KeyCode.LeftShift))
         {
 
          
             Debug.DrawRay(transform.position, AimingPoint, Color.green);
             Vector3 directionToTarget = (AimingPoint - transform.position);
             float ToTargetDistance = directionToTarget.magnitude;
-            FollowGO.transform.position = directionToTarget.normalized * (ToTargetDistance);
+            FollowGO.transform.position = directionToTarget.normalized * (ToTargetDistance);//here we should apply a percentage of the length we want the camera to be centered, but as we are using cinemachine the camera computes an average between the group target which I set up
 
         }
-        if (Input.GetButtonUp("Aim"))
+        if (Input.GetKeyUp(KeyCode.LeftShift))
         {
            
             
@@ -71,6 +71,7 @@ public class PlaceHolderMOVEMENT : MonoBehaviour
 
         }
 
+        //MOVE
         if (direction.magnitude>=0.1f)
         {
 
