@@ -8,6 +8,8 @@ using System.Net.Sockets;
 using System.Text;
 
 
+using System.Threading;
+
 public class Client : MonoBehaviour
 {
 
@@ -16,6 +18,9 @@ public class Client : MonoBehaviour
     String input, stringData;
     IPEndPoint ipep;
     Socket server;
+    Thread listener = null;
+    EndPoint Remote;
+
 
     // Start is called before the first frame update
     void Start()
@@ -31,7 +36,21 @@ public class Client : MonoBehaviour
         server.SendTo(data,data.Length,SocketFlags.None,ipep);
 
         IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-        EndPoint Remote = (EndPoint)sender;
+         Remote = (EndPoint)sender;
+
+
+        if (listener==null)
+        {
+            listener = new Thread(ListenForMessages);
+            listener.Start();
+
+        }
+
+    }
+
+
+    void ListenForMessages() {
+
 
         data = new byte[1024];
         int recv = server.ReceiveFrom(data, ref Remote);
@@ -40,14 +59,26 @@ public class Client : MonoBehaviour
         Debug.Log(Encoding.ASCII.GetString(data, 0, recv));
 
 
+        while (true)
+        {
+            input = Console.ReadLine();
+            if (input == "exit")
+                break;
+            server.SendTo(Encoding.ASCII.GetBytes("Ping"), Remote);
+            data = new byte[1024];
+            recv = server.ReceiveFrom(data, ref Remote);
+            stringData = Encoding.ASCII.GetString(data, 0, recv);
+            Debug.Log(stringData);
+        }
+
+
+
+
     }
-
-
-
 
     //// Update is called once per frame
     //void Update()
     //{
-        
+
     //}
 }
