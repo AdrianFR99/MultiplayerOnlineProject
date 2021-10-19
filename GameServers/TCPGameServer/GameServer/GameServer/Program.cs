@@ -18,6 +18,22 @@ namespace GameServer
             Console.Title = "Game Server";
             TestServer.Start();
 
+            while (true)
+            {
+
+                if (!TestServer.GetThreadStatus())
+                {
+                    break;
+                }
+                
+            }
+
+
+            Console.WriteLine("Server disconnected");
+            Console.WriteLine("Press any key to shut down program");
+            
+            Console.ReadKey();
+
            
 
         }

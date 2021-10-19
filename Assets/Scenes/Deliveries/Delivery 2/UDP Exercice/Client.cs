@@ -33,9 +33,7 @@ public class Client : MonoBehaviour
 
         server = new Socket(AddressFamily.InterNetwork,SocketType.Dgram,ProtocolType.Udp);//defining socket and protocol 
 
-        String welcome = "hello???";
-        data = Encoding.ASCII.GetBytes(welcome);//encode initial message
-        server.SendTo(data,data.Length,SocketFlags.None,ipep);
+       
 
         IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
          Remote = (EndPoint)sender;
@@ -73,6 +71,11 @@ public class Client : MonoBehaviour
 
         try
         {
+
+            String welcome = "hello???";
+            data = Encoding.ASCII.GetBytes(welcome);//encode initial message
+            server.SendTo(data, data.Length, SocketFlags.None, ipep);
+
             data = new byte[1024];
             int recv = server.ReceiveFrom(data, ref Remote);
 
