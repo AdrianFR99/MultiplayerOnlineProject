@@ -21,6 +21,8 @@ public class Client : MonoBehaviour
     EndPoint Remote;
 
     Thread listener = null;
+    public bool connectionRequested = false;
+    public bool disconnectionRequested = false;
     bool kill = false;
 
 
@@ -39,8 +41,9 @@ public class Client : MonoBehaviour
          Remote = (EndPoint)sender;
 
 
-        if (listener==null)
+        if (listener==null && connectionRequested)
         {
+            connectionRequested = false;
             listener = new Thread(ListenForMessages);
             listener.Start();
 
@@ -97,9 +100,9 @@ public class Client : MonoBehaviour
                 i++;
                 Thread.Sleep(1000);
 
-                if (i == 5)
+                if (i == 5 || disconnectionRequested)
                 {
-
+                    disconnectionRequested = false;
                     RequestKillThread();
 
                 }
@@ -127,4 +130,15 @@ public class Client : MonoBehaviour
 
     }
  
+    public void RequestConnection()
+    {
+        Debug.Log("Client Requesting Connection...");
+        connectionRequested = true;
+    }
+
+    public void RequestDisonnection()
+    {
+        Debug.Log("Client Requesting Disconnection...");
+        disconnectionRequested = true;
+    }
 }
