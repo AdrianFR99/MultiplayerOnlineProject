@@ -13,6 +13,7 @@ using System.Threading;
 public class Client : MonoBehaviour
 {
 
+    // Data declaration like in the server
     int recv;
     byte[] data;
     String input, stringData;
@@ -21,46 +22,36 @@ public class Client : MonoBehaviour
     EndPoint Remote;
 
     Thread listener = null;
-    public bool connectionRequested = false;
-    public bool disconnectionRequested = false;
     bool kill = false;
 
 
     // Start is called before the first frame update
     void Start()
     {
-
+        //Data initialization 
         data = new byte[1024];
         ipep = new IPEndPoint(IPAddress.Parse("127.0.0.1"),9050);//Defining local IP
 
         server = new Socket(AddressFamily.InterNetwork,SocketType.Dgram,ProtocolType.Udp);//defining socket and protocol 
 
        
-
         IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
          Remote = (EndPoint)sender;
 
 
-        if (listener==null && connectionRequested)
-        {
-            connectionRequested = false;
-            listener = new Thread(ListenForMessages);
-            listener.Start();
-
-        }
 
     }
 
     private void Update()
     {
 
-        if (kill && !listener.IsAlive)
+        if (listener!=null && !listener.IsAlive)
         {
-            
+           // Debug.Log("thread Alive:" + listener.IsAlive);
             listener = null;
             Debug.Log("Thread closed");
-            kill = false;
-            server.Close();
+      
+          
         }
 
 
@@ -69,13 +60,27 @@ public class Client : MonoBehaviour
     }
 
 
-    void ListenForMessages() {
+  public void StartThread()
+    {
+
+        if (listener == null)
+        {
+
+            listener = new Thread(Connect);
+            listener.Start();
+
+        }
+
+    }
+
+
+    void Connect() {
 
 
         try
         {
 
-            String welcome = "hello???";
+            String welcome = "Hello???";
             data = Encoding.ASCII.GetBytes(welcome);//encode initial message
             server.SendTo(data, data.Length, SocketFlags.None, ipep);
 
@@ -84,8 +89,6 @@ public class Client : MonoBehaviour
 
             Debug.Log("Message recieve form:" + Remote.ToString());
             Debug.Log(Encoding.ASCII.GetString(data, 0, recv));
-
-
 
             int i = 0;
 
@@ -100,28 +103,30 @@ public class Client : MonoBehaviour
                 i++;
                 Thread.Sleep(1000);
 
-                if (i == 5 || disconnectionRequested)
+                if (i == 5 )
                 {
-                    disconnectionRequested = false;
+                 
                     RequestKillThread();
 
                 }
 
             }
 
-            //listener.Abort();
-
-
-            Debug.Log("thread Alive:" + listener.IsAlive);
+           
         }
         catch (ThreadInterruptedException exception)
         {
 
             Debug.Log("thread Interrupted");
+            Debug.Log(exception);
             RequestKillThread();
 
 
         }
+
+        server.Shutdown(SocketShutdown.Both);//This ensures that all data is sent and received on the connected socket before it is closed.
+        server.Close();
+
     }
 
     void RequestKillThread()
@@ -130,15 +135,4 @@ public class Client : MonoBehaviour
 
     }
  
-    public void RequestConnection()
-    {
-        Debug.Log("Client Requesting Connection...");
-        connectionRequested = true;
-    }
-
-    public void RequestDisonnection()
-    {
-        Debug.Log("Client Requesting Disconnection...");
-        disconnectionRequested = true;
-    }
 }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GameServer
 {
-    class Program
+    class Program //TCP PROGRAM
     {
 
        
@@ -23,6 +23,7 @@ namespace GameServer
 
                 if (!TestServer.GetThreadStatus())
                 {
+                    TestServer.setThreatNull();
                     break;
                 }
                 

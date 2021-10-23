@@ -13,22 +13,23 @@ using System.Threading;
 public class TCPClient : MonoBehaviour
 {
 
-    byte[] data;
+    // Data declaration like in the server
+     byte[] data;
     string input, stringData;
-    IPEndPoint ipep;
-    Socket server;
-    int recv;
+     IPEndPoint ipep;
+     Socket server;
+     int recv;
 
-    Thread listener;
+    Thread listener=null;
 
     void Start()
     {
-
+        //Data initialization 
       data = new byte[1024];
       ipep =  new IPEndPoint(IPAddress.Parse("127.0.0.1"),9050);
       server = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
-      listener = null;
-      
+     
+      //Try to connect 
         try
         {
 
@@ -52,7 +53,14 @@ public class TCPClient : MonoBehaviour
    
     void Update()
     {
-        
+
+        if (listener != null && listener.IsAlive==false )
+        {
+            // Debug.Log("thread Alive:" + listener.IsAlive);
+            listener = null;
+            Debug.Log("Thread closed");
+
+        }
     }
 
     void ListenToMessages()
@@ -82,7 +90,7 @@ public class TCPClient : MonoBehaviour
 
         Console.WriteLine("Disconnecting from server...");
         server.Shutdown(SocketShutdown.Both); //This ensures that all data is sent and received on the connected socket before it is closed.
-        server.Close();
+        server.Close(); 
 
 
 

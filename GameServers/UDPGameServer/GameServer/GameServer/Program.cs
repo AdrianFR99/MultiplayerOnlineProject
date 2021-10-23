@@ -5,10 +5,8 @@ using System.Text;
 
 namespace GameServer
 {
-    class Program
+    class Program //UDP PROGRAM
     {
-
-       
 
         static void Main(string[] args)
         {
@@ -19,20 +17,25 @@ namespace GameServer
             TestServer.Start();
 
 
-            while (true)
+            while (true) //While threat is alive
             {
 
-                if (TestServer.GetKillBool())
+                if (!TestServer.GetThreatStatus())//Else set thread to null and break
                 {
 
-                    TestServer.ShutDownServer();
+                    TestServer.setThreatNull();
                     break;
+
                 }
 
 
 
             }
 
+
+            Console.WriteLine("Server disconnected");
+            Console.WriteLine("Press any key to shut down program");
+            Console.ReadKey();
         }
 
 
