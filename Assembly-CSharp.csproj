@@ -56,13 +56,14 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Prototype Assets\Scripts\UI_Functions.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 1 scripts\ObjectBehavior.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 2\TCPExercice\TCPClient.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 2\UDP Exercice\Client.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 1 scripts\ObjectAbility.cs" />
     <Compile Include="Assets\Prototype Assets\Scripts\CameraScript.cs" />
     <Compile Include="Assets\Prototype Assets\Scripts\PlaceHolderMOVEMENT.cs" />
-    <Compile Include="Assets\Prototype Assets\Scripts\UI_Functions.cs" />
+    <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\ClientScript.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Thirdparty\TextMesh Pro\Shaders\TMPro.cginc" />
