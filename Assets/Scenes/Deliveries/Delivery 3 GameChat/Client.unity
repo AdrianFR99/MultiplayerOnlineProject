@@ -433,7 +433,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u200B"
+  m_text: "9050\u200B"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -750,7 +750,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 815747752}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 906370333}
+        m_TargetAssemblyTypeName: ClientScript, Assembly-CSharp
+        m_MethodName: ConnectToServer
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &815747752
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -871,7 +883,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chatContainer: {fileID: 1679623750}
-  messagePrefab: {fileID: 847754379829457606}
+  messagePrefab: {fileID: 1418763339444516871, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
   clientName: JOJOs
 --- !u!4 &906370334
 Transform:
@@ -1449,7 +1461,7 @@ MonoBehaviour:
   m_CaretColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_CustomCaretColor: 0
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
-  m_Text: 
+  m_Text: 9050
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 1
   m_ReadOnly: 0
@@ -1901,7 +1913,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1750736011}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
@@ -2639,6 +2651,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Message
       objectReference: {fileID: 0}
+    - target: {fileID: 1418763339444516871, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -2657,7 +2673,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
       propertyPath: m_AnchorMin.x
@@ -2665,7 +2681,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
       propertyPath: m_SizeDelta.x
@@ -2705,11 +2721,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 223.5
       objectReference: {fileID: 0}
     - target: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -25
       objectReference: {fileID: 0}
     - target: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2728,10 +2744,5 @@ PrefabInstance:
 --- !u!224 &847754379829457605 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5820823819276444506, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
-  m_PrefabInstance: {fileID: 847754379829457604}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &847754379829457606 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1418763339444516871, guid: f759f17b80baa5b44a6c1497422311c0, type: 3}
   m_PrefabInstance: {fileID: 847754379829457604}
   m_PrefabAsset: {fileID: 0}

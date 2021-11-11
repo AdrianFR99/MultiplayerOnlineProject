@@ -1,5 +1,9 @@
-﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+
+using System;
+
 using System.Text;
 
 using System.Net;
@@ -12,19 +16,18 @@ using System.IO;
 
 //NOTE: Most of the code is similar to the UDP server, for this reason there will be not as much comments in this file
 
-namespace GameServer
-{
-    class Server //TCP SERVER 
+
+    public class Server : MonoBehaviour//TCP SERVER 
     {
         private List<ServerClient> clients;
         private List<ServerClient> disconnectList;
 
-        public int port = 9050; // Port 
+        public int port = 6321; // Port 
         private TcpListener server; // Tcp Listener listens for incoming connection to the server
         private bool serverStarted;
-        
 
-        public void startServer()
+
+        public void Start()
         {
 
             clients = new List<ServerClient>();
@@ -32,18 +35,18 @@ namespace GameServer
             try
             {
 
-                server = new TcpListener(IPAddress.Any,port);
+                server = new TcpListener(IPAddress.Any, port);
                 server.Start(); //The Start method initializes the underlying Socket, binds it to a local endpoint, and listens for incoming connection attempts https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener.start?view=net-5.0
 
                 StartListening(); //Start async operations to accept connections 
                 serverStarted = true; //set bool 
 
-                Console.WriteLine("Server Started Succesfully"+"On port:"+port.ToString());
+            Debug.Log("Server Started Succesfully" + "On port:" + port.ToString());
             }
             catch (Exception e)
             {
 
-                Console.WriteLine("Error startign server:"+ e.Message); //Print if error is catched
+            Debug.Log("Error startign server:" + e.Message); //Print if error is catched
 
             }
 
@@ -51,15 +54,15 @@ namespace GameServer
 
 
         //this update funtion should be going in a thread
-        public void update()
+        public void Update()
         {
 
             if (!serverStarted)
                 return;
 
-            foreach(ServerClient c in clients)//lets check for incomming messages for each serverclient 
+            foreach (ServerClient c in clients)//lets check for incomming messages for each serverclient 
             {
-               
+
 
                 if (!Isconnected(c.tcp))// check if the client is connected if not:
                 {
@@ -79,10 +82,10 @@ namespace GameServer
                         StreamReader reader = new StreamReader(stream, true);//We are basically setting a reader to process the bytes recieve as messages
                         string data = reader.ReadLine(); // return a string which from the stream (from message)                  
 
-                        if(data!= null)
+                        if (data != null)
                         {
                             //Process recieved data 
-                            OnIncomingData(c,data);
+                            OnIncomingData(c, data);
 
                         }
 
@@ -94,9 +97,10 @@ namespace GameServer
 
             }
 
-           for(int i=0; i < disconnectList.Count - 1; i++){
+            for (int i = 0; i < disconnectList.Count - 1; i++)
+            {
 
-                Broadcast(disconnectList[i].clientName + "has disconnected",clients);
+                Broadcast(disconnectList[i].clientName + "has disconnected", clients);
 
                 clients.Remove(disconnectList[i]);
                 disconnectList.RemoveAt(i);
@@ -115,10 +119,10 @@ namespace GameServer
             {
 
                 c.clientName = data.Split('|')[1];
-                Broadcast(c.clientName + " has connected" , clients);
+                Broadcast(c.clientName + " has connected", clients);
                 return;
             }
-            Broadcast(c.clientName+":"+data, clients);
+            Broadcast(c.clientName + ":" + data, clients);
 
 
         }
@@ -129,7 +133,7 @@ namespace GameServer
             try// maybe we are not able to reach a client 
             {
 
-                if(tcp != null && tcp.Client!=null && tcp.Client.Connected)//tcp is null means the TcpClient does not have any data assigned // if tcp.client is different from null then we have a socket connected// and tcp.Client.Connected is true when the client is connected thorugh a remote resource since the last operation 
+                if (tcp != null && tcp.Client != null && tcp.Client.Connected)//tcp is null means the TcpClient does not have any data assigned // if tcp.client is different from null then we have a socket connected// and tcp.Client.Connected is true when the client is connected thorugh a remote resource since the last operation 
                 {
 
                     if (tcp.Client.Poll(0, SelectMode.SelectRead))//The Poll method checks the state of the Socket. IMPORTANT Poll first paramenter is the time to wait for a respons in MICROSECONDS https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.poll?view=net-5.0
@@ -141,15 +145,15 @@ namespace GameServer
                 }
                 else
                 {
-                    Console.WriteLine("Error when reaching client Socket is null or not connected");
+                Debug.Log("Error when reaching client Socket is null or not connected");
                     return false;
 
                 }
-               
+
             }
             catch
             {
-                Console.WriteLine("Client has not been reach");
+            Debug.Log("Client has not been reach");
                 return false;
             }
 
@@ -165,22 +169,22 @@ namespace GameServer
         {
 
             TcpListener listener = (TcpListener)ar.AsyncState; //This property returns the object that is the last parameter of the method that initiates an asynchronous operation.
-           
+
             clients.Add(new ServerClient(listener.EndAcceptTcpClient(ar)));//EndAcceptTcpClient End asynchronous operation 
             StartListening();//once a client has been accepted then we wait for another conncetion 
 
 
-            // Here we should display a connection in the chat, e.j. Adrián has connected
+            // Here we should display a connection in the chat, e.j. Adri�n has connected
 
             //Broadcast(clients[clients.Count-1].clientName + "has connected",clients);
-            Broadcast("%NAME", new List<ServerClient>() {clients[clients.Count-1]}); // IMPROVE We should create overload for broadcasting
+            Broadcast("%NAME", new List<ServerClient>() { clients[clients.Count - 1] }); // IMPROVE We should create overload for broadcasting
 
         }
 
         private void Broadcast(string data, List<ServerClient> clientL)
         {
 
-            foreach(ServerClient c in clientL)
+            foreach (ServerClient c in clientL)
             {
 
                 try
@@ -192,9 +196,9 @@ namespace GameServer
 
 
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    Console.WriteLine("Write error :" + e.Message + "To client "+ c.clientName);
+                  Debug.Log("Write error :" + e.Message + "To client " + c.clientName);
 
                 }
             }
@@ -209,7 +213,7 @@ namespace GameServer
             //should we add list here?
             server.Stop();
             serverStarted = false;
-            
+
 
 
         }
@@ -218,9 +222,9 @@ namespace GameServer
     }
 
 
-    
 
-public class ServerClient // we need this class to store a list of clients, who are those which are connected 
+
+    public class ServerClient // we need this class to store a list of clients, who are those which are connected 
     {
         public TcpClient tcp; //socket assignation 
         public string clientName;// client name
@@ -229,10 +233,10 @@ public class ServerClient // we need this class to store a list of clients, who 
         {
             clientName = "Guest";
             tcp = clientSocket;
-        } 
-        
+        }
+
 
 
     }
 
-}
+

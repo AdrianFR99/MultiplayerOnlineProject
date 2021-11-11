@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,10 +30,10 @@ public class ClientScript : MonoBehaviour
 
         //Default host / prot values
         string host = "127.0.0.1";
-        int port = 6321;
+        int port = 9050;
 
         //Overwrite default host/port values
-        OverwriteDefValues(host, port);
+       // OverwriteDefValues(host, port);
 
 
         try
@@ -95,7 +96,7 @@ public class ClientScript : MonoBehaviour
 
                 }
        GameObject go = Instantiate(messagePrefab, chatContainer.transform);
-        go.GetComponentInChildren<Text>().text = data; // Potential error Textmesh pro is type Text?
+        go.GetComponentInChildren<TextMeshProUGUI>().text = data; // Potential error Textmesh pro is type Text?
 
     }
 

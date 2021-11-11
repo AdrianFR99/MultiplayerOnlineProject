@@ -58,12 +58,13 @@
   <ItemGroup>
     <Compile Include="Assets\Prototype Assets\Scripts\UI_Functions.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 1 scripts\ObjectBehavior.cs" />
+    <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\ClientScript.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 2\TCPExercice\TCPClient.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 2\UDP Exercice\Client.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 1 scripts\ObjectAbility.cs" />
     <Compile Include="Assets\Prototype Assets\Scripts\CameraScript.cs" />
     <Compile Include="Assets\Prototype Assets\Scripts\PlaceHolderMOVEMENT.cs" />
-    <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\ClientScript.cs" />
+    <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\testServer.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Thirdparty\TextMesh Pro\Shaders\TMPro.cginc" />
