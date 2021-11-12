@@ -57,21 +57,21 @@ namespace GameServer
             if (!serverStarted)
                 return;
 
-            foreach(ServerClient c in clients)//lets check for incomming messages for each serverclient 
+            for(int i=0;i<clients.Count;i++)//lets check for incomming messages for each serverclient 
             {
                
 
-                if (!Isconnected(c.tcp))// check if the client is connected if not:
+                if (!Isconnected(clients[i].tcp))// check if the client is connected if not:
                 {
-                    c.tcp.Close();
-                    disconnectList.Add(c);
+                    clients[i].tcp.Close();
+                    disconnectList.Add(clients[i]);
                     continue;
 
                 }
                 else// if connected then 
                 {
 
-                    NetworkStream stream = c.tcp.GetStream();
+                    NetworkStream stream = clients[i].tcp.GetStream();
                     if (stream.DataAvailable)
                     {
 
@@ -82,7 +82,7 @@ namespace GameServer
                         if(data!= null)
                         {
                             //Process recieved data 
-                            OnIncomingData(c,data);
+                            OnIncomingData(clients[i], data);
 
                         }
 
@@ -111,7 +111,7 @@ namespace GameServer
 
             //  Console.WriteLine(c.clientName + "has sent the following message:" + data);
 
-            if (data.Contains("&Name"))
+            if (data.Contains("&NAME"))
             {
 
                 c.clientName = data.Split('|')[1];
