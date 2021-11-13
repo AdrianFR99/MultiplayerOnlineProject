@@ -8,6 +8,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.IO;
 
+using System.Xml.Serialization;
+
 
 
 //NOTE: Most of the code is similar to the UDP server, for this reason there will be not as much comments in this file
@@ -29,13 +31,14 @@ namespace GameServer
 
             clients = new List<ServerClient>();
             disconnectList = new List<ServerClient>();
+
             try
             {
 
                 server = new TcpListener(IPAddress.Any,port);
                 server.Start(); //The Start method initializes the underlying Socket, binds it to a local endpoint, and listens for incoming connection attempts https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener.start?view=net-5.0
 
-                StartListening(); //Start async operations to accept connections 
+                StartListening(); //Start async operations to accept connections //Does NOT block until a client connection is received
                 serverStarted = true; //set bool 
 
                 Console.WriteLine("Server Started Succesfully"+"On port:"+port.ToString());
@@ -58,8 +61,7 @@ namespace GameServer
                 return;
 
             for(int i=0;i<clients.Count;i++)//lets check for incomming messages for each serverclient 
-            {
-               
+            { 
 
                 if (!Isconnected(clients[i].tcp))// check if the client is connected if not:
                 {
@@ -75,17 +77,22 @@ namespace GameServer
                     if (stream.DataAvailable)
                     {
 
+                        //decode data comming from the user
+                        var message = new ClientMessage();
 
-                        StreamReader reader = new StreamReader(stream, true);//We are basically setting a reader to process the bytes recieve as messages
-                        string data = reader.ReadLine(); // return a string which from the stream (from message)                  
+                        XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
 
-                        if(data!= null)
+                        message = (ClientMessage)clientMessageSerializer.Deserialize(stream);
+                        string data = message.messageContent.ToString();
+                        Console.WriteLine(data);
+
+                        if (data != null)
                         {
                             //Process recieved data 
                             OnIncomingData(clients[i], data);
 
                         }
-
+                        
                     }
 
 
@@ -185,12 +192,17 @@ namespace GameServer
 
                 try
                 {
+                    //get client stream
+                    NetworkStream stream = c.tcp.GetStream();
+                    //data passed as an argument to Broadcast()
+                    //encode data to send to the user
+                    var message = new ClientMessage();
+                    message.messageContent = data;
+                    message.clientName = c.clientName;
 
-                    StreamWriter writer = new StreamWriter(c.tcp.GetStream()); // create the writer to pass the data
-                    writer.WriteLine(data);
-                    writer.Flush();
-
-
+                    //XmlSerializer clientMessageSerializer declared at the beginning
+                    XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+                    clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
                 }
                 catch(Exception e)
                 {
@@ -201,7 +213,6 @@ namespace GameServer
 
 
         }
-
 
         private void OnServerShutDown()
         {
@@ -217,10 +228,7 @@ namespace GameServer
         public bool GetServerStatus() { return serverStarted; }
     }
 
-
-    
-
-public class ServerClient // we need this class to store a list of clients, who are those which are connected 
+    public class ServerClient // we need this class to store a list of clients, who are those which are connected 
     {
         public TcpClient tcp; //socket assignation 
         public string clientName;// client name
@@ -229,10 +237,13 @@ public class ServerClient // we need this class to store a list of clients, who 
         {
             clientName = "Guest";
             tcp = clientSocket;
-        } 
-        
-
-
+        }
     }
 
+    public struct ClientMessage // struct to serialize when sending a message. 
+    {
+        public string messageContent;
+        public string clientName;
+        //color
+    }
 }

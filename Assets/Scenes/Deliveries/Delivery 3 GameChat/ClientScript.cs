@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using System.Xml.Serialization;
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,9 +19,8 @@ public class ClientScript : MonoBehaviour
     private bool socketReady;
     private TcpClient socket;
     private NetworkStream stream;
-    private StreamWriter writer;
-    private StreamReader reader;
-
+    //private StreamWriter writer;
+    //private StreamReader reader;
 
     public void ConnectToServer()
     {
@@ -41,8 +42,9 @@ public class ClientScript : MonoBehaviour
 
             socket = new TcpClient(host,port);
             stream = socket.GetStream();
-            writer = new StreamWriter(stream);
-            reader = new StreamReader(stream);
+            //writer = new StreamWriter(stream);
+            //reader = new StreamReader(stream);
+
             socketReady = true; 
 
         }
@@ -64,16 +66,29 @@ public class ClientScript : MonoBehaviour
 
             if (stream.DataAvailable)
             {
+                try
+                {
+                    //decode data comming from the user
+                    var message = new ClientMessage();
 
+                    XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
 
-                string data = reader.ReadLine();
-                if(data != null)
+                    message = (ClientMessage)clientMessageSerializer.Deserialize(stream);
+                    string data = message.messageContent.ToString();
+                    
+                    if(data != null)
+                    {
+                    
+                        OnIncomingData(data);
+                    
+                    }
+                }
+                catch (Exception e)
                 {
 
-                    OnIncomingData(data);
+                    Debug.Log("Deserialization error:" + e.Message);
 
                 }
-
             }
 
 
@@ -100,21 +115,24 @@ public class ClientScript : MonoBehaviour
 
     }
 
-
     private void Send(string data)
     {
-
 
         if (!socketReady)
             return;
         else
         {
-            writer.WriteLine(data);
-            writer.Flush();
+            //data passed as an argument to Send()
+            //encode data to send to the server
+            var message = new ClientMessage();
+            message.messageContent = data;
+            message.clientName = clientName;
 
+            XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+
+            clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
 
         }
-
 
     }
 
@@ -148,8 +166,8 @@ public class ClientScript : MonoBehaviour
         if (!socketReady)
             return;
 
-        writer.Close();
-        reader.Close();
+        //writer.Close();
+        //reader.Close();
         socket.Close();
         socketReady = false;
 
@@ -166,4 +184,22 @@ public class ClientScript : MonoBehaviour
         CloseSocket();
     }
 
+    public class ServerClient // we need this class to store a list of clients, who are those which are connected 
+    {
+        public TcpClient tcp; //socket assignation 
+        public string clientName;// client name
+
+        public ServerClient(TcpClient clientSocket)//contructor where we define the client name and the tcp socket 
+        {
+            clientName = "Guest";
+            tcp = clientSocket;
+        }
+    }
+
+    public struct ClientMessage // struct to serialize when sending a message. 
+    {
+        public string messageContent;
+        public string clientName;
+        //color
+    }
 }
