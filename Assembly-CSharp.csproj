@@ -67,6 +67,7 @@
     <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\ClearBehaviour.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\SMBehaviour.cs" />
     <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\ChatMenu.cs" />
+    <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\QuitButton.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Thirdparty\TextMesh Pro\Shaders\TMPro.cginc" />

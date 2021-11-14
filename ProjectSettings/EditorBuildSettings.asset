@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Deliveries/Delivery 3 GameChat/Client.unity
+    guid: 113f10a2ea3d3b040844f5b8509d6218
   m_configObjects: {}

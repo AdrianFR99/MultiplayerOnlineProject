@@ -258,13 +258,25 @@ namespace GameServer
         }
 
 
-        private void OnServerShutDown()
+        public void OnServerShutDown()
         {
 
-            //should we add list here?
+            //We disconnect each client
+            foreach (ServerClient sc in clients)
+            {
+                sc.tcp.Close();
+                disconnectList.Add(sc);
+
+            }
+            clients.Clear();
+
+            Console.WriteLine("clients disconnocted from server");
+
             server.Stop();
             serverStarted = false;
-            
+            Console.WriteLine("Server conncetion closed");
+
+
 
 
         }

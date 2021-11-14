@@ -26,11 +26,11 @@ namespace GameServer
 
               TestServer.update();
 
+              
 
             }
-
-
-
+         
+            TestServer.OnServerShutDown();
             Console.WriteLine("Server disconnected");
             Console.WriteLine("Press any key to shut down program");
 
