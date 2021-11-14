@@ -19,7 +19,6 @@ public class ClientScript : MonoBehaviour
     private bool socketReady;
     private TcpClient socket;
     private NetworkStream stream;
-    private string endLine = "</endLine>";
 
     public void ConnectToServer()
     {
@@ -61,39 +60,10 @@ public class ClientScript : MonoBehaviour
 
         if (socketReady)
         {
-
-
-            //if (stream.DataAvailable)
-            //{
-            //    try
-            //    {
-            //        //decode data comming from the user
-            //        var message = new ClientMessage();
-
-            //        XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
-            //        message = (ClientMessage)clientMessageSerializer.Deserialize(stream);
-            //        string data = message.messageContent.ToString();
-
-            //        if(data != null)
-            //        {
-
-            //            OnIncomingData(data);
-
-            //        }
-            //    }
-            //    catch (Exception e)
-            //    {
-
-            //        Debug.Log("Deserialization error:" + e.Message);
-
-            //    }
-            //}
-
             if (stream.DataAvailable)
             {
                 TextReader textReader = new StreamReader(stream);
-                string longString = string.Empty; ;
-
+                string longString = string.Empty;
                 while (true)
 
                 {
@@ -105,17 +75,19 @@ public class ClientScript : MonoBehaviour
                     catch(Exception e)
                     {
                         Debug.Log("Error reading string:" + e.Message);
+                        break;
                     }
                     if (s == null) 
                         break;
 
                     longString = longString + s;
 
-                    //identify lastString of the message
                     if (s.Contains("clientName")) // name is the last parameter so it is the end of the class (last line to read)
-                        break; 
-                }
+                        break;
 
+                }
+                longString = longString + "</ClientMessage>"; //I don't know why the last line pops an error so i'll add it myself
+                
                 var message = new ClientMessage();
                 XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
                 message = (ClientMessage)serializer.Deserialize(new StringReader(longString));
@@ -164,8 +136,6 @@ public class ClientScript : MonoBehaviour
             XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
 
             clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
-
-            textWriter.WriteLine(endLine); //custom end to allow the reader identify the end of the class
         }
 
     }

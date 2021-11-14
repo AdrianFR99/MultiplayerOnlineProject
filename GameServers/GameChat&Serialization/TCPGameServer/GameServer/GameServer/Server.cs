@@ -24,7 +24,6 @@ namespace GameServer
         public int port = 9050; // Port 
         private TcpListener server; // Tcp Listener listens for incoming connection to the server
         private bool serverStarted;
-        private string endLine = "</endLine>";
 
         public void startServer()
         {
@@ -85,14 +84,27 @@ namespace GameServer
                         while (true)
 
                         {
-                            string s = textReader.ReadLine();
-
-                            if (s == null) throw new Exception("Socket closed");
+                            string s = string.Empty;
+                            try
+                            {
+                                s = textReader.ReadLine();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Error reading string:" + e.Message);
+                                break;
+                            }
+                            if (s == null)
+                                break;
 
                             longString = longString + s;
 
-                            if (s == endLine) break; //identify lastString of the message
+                            if (s.Contains("clientName")) // name is the last parameter so it is the end of the class (last line to read)
+                                break;
                         }
+
+                        longString = longString + "</ClientMessage>"; //I don't know why the last line pops an error so i'll add it myself
+
                         var message = new ClientMessage();
                         XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
                         message = (ClientMessage)serializer.Deserialize(new StringReader(longString));
@@ -211,8 +223,7 @@ namespace GameServer
                     XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
 
                     clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
-
-                    textWriter.WriteLine(endLine); //custom end to allow the reader identify the end of the class
+                
                 }
                 catch (Exception e)
                 {
@@ -231,8 +242,6 @@ namespace GameServer
             server.Stop();
             serverStarted = false;
             
-
-
         }
 
         public bool GetServerStatus() { return serverStarted; }
