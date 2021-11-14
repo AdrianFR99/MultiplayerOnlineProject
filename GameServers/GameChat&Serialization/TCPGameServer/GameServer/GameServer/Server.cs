@@ -26,6 +26,8 @@ namespace GameServer
 
         string SMstring = "$SM|";
 
+        private Commands commands;
+
         public void startServer()
         {
 
@@ -41,7 +43,9 @@ namespace GameServer
                 serverStarted = true; //set bool 
 
                 Console.WriteLine("Server Started Succesfully"+"On port:"+port.ToString());
-            }
+
+               commands=new Commands();
+    }
             catch (Exception e)
             {
 
@@ -113,11 +117,30 @@ namespace GameServer
                 if (message.messageContent.Contains("&NAME"))
                 {
 
-                    c.clientName = message.messageContent.Split('|')[1];
-                    Broadcast(SMstring+c.clientName + " has connected", clients);
-                    return;
+                    commands.RegisterNameCM(SMstring, message.messageContent, c, clients);
+
                 }
-                Broadcast(c.clientName + ":" + message.messageContent.ToString(), clients);
+                else if (message.messageContent.Contains("&HELP"))
+                {
+                    commands.HelpCM(c);
+                }
+                else if (message.messageContent.Contains("&LIST"))
+                {
+
+                    commands.ListCM(c, clients);
+
+                }
+                else if (message.messageContent.Contains("&WHISPER"))//EXAMPLE---> $WHISPER|Adrian:hello there? 
+                {
+
+                    commands.WhisperCM(message.messageContent, c, clients);
+
+
+                }
+                else
+                {
+                    Broadcast(c.clientName + ":" + message.messageContent, clients);
+                }
             }
 
         }
@@ -176,7 +199,7 @@ namespace GameServer
 
         }
 
-        private void Broadcast(string data, List<ServerClient> clientL)
+        internal void Broadcast(string data, List<ServerClient> clientL)
         {
 
             foreach(ServerClient c in clientL)
@@ -202,6 +225,34 @@ namespace GameServer
 
                 }
             }
+
+
+        }
+        internal void Broadcast(string data,ServerClient c)
+        {
+
+          
+
+                try
+                {
+                    //get client stream
+                    NetworkStream stream = c.tcp.GetStream();
+                    //data passed as an argument to Broadcast()
+                    //encode data to send to the user
+                    var message = new ClientMessage();
+                    message.messageContent = data;
+                    message.clientName = c.clientName;
+
+                    SerializeMessage(stream, message);
+
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Write error :" + e.Message + "To client " + c.clientName);
+
+                }
+            
 
 
         }
@@ -262,9 +313,76 @@ namespace GameServer
     }
 
 
-    
 
-public class ServerClient // we need this class to store a list of clients, who are those which are connected 
+
+    class Commands : Server
+    {
+
+        public void RegisterNameCM(string SM, string data, ServerClient c, List<ServerClient> list)
+        {
+            c.clientName = data.Split('|')[1];
+            Broadcast(SM + c.clientName + " has connected", list);
+            Console.WriteLine("Client Identify as :" + c.clientName);
+
+
+
+        }
+
+        public void HelpCM(ServerClient c)
+        {
+
+            Broadcast("&LIST To see players connected," +
+                "&WHISPER to talk directly to a player,", c);//TODO: write correct message
+
+
+        }
+        public void ListCM(ServerClient c, List<ServerClient> list)
+        {
+            string aux = null;
+
+            foreach (ServerClient sc in list)
+            {
+
+                if (aux == null)
+                    aux = sc.clientName + "@";
+                else
+                    aux = aux + "@" + sc.clientName + "@";
+
+            }
+
+            aux = aux.Replace("@", System.Environment.NewLine);
+            Broadcast(aux, c);
+            return;
+
+
+
+        }
+        public void WhisperCM(string data, ServerClient c, List<ServerClient> list)
+        {
+
+            string[] Auxdata = data.Split('|', ':');
+
+            string user = Auxdata[1];
+            string message = Auxdata[2];
+
+            foreach (ServerClient sc in list)
+            {
+
+                if (sc.clientName == user)
+                {
+
+                    Broadcast(c.clientName + ":" + message, sc);
+                    break;
+                }
+            }
+
+
+        }
+    }
+
+
+
+    public class ServerClient // we need this class to store a list of clients, who are those which are connected 
     {
         public TcpClient tcp; //socket assignation 
         public string clientName;// client name
@@ -273,8 +391,8 @@ public class ServerClient // we need this class to store a list of clients, who 
         {
             clientName = "Guest";
             tcp = clientSocket;
-        } 
-        
+        }
+
 
 
     }
@@ -288,3 +406,7 @@ public class ServerClient // we need this class to store a list of clients, who 
 
 
 }
+
+
+
+
