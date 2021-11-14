@@ -7,6 +7,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+using System.Xml.Serialization;
+
 public class ClientScript : MonoBehaviour
 {
 
@@ -17,9 +19,7 @@ public class ClientScript : MonoBehaviour
     private bool socketReady;
     private TcpClient socket;
     private NetworkStream stream;
-    private StreamWriter writer;
-    private StreamReader reader;
-
+    
 
     public void ConnectToServer()
     {
@@ -41,8 +41,7 @@ public class ClientScript : MonoBehaviour
 
             socket = new TcpClient(host,port);
             stream = socket.GetStream();
-            writer = new StreamWriter(stream);
-            reader = new StreamReader(stream);
+
             socketReady = true; 
 
         }
@@ -65,14 +64,11 @@ public class ClientScript : MonoBehaviour
             if (stream.DataAvailable)
             {
 
+                var message = new ClientMessage(); //Created Message struct in order to pass serialized data
+                message = DeserializeMessage(stream);//Deserialize data, in order to use it 
 
-                string data = reader.ReadLine();
-                if(data != null)
-                {
+                OnIncomingData(message);
 
-                    OnIncomingData(data);
-
-                }
 
             }
 
@@ -83,20 +79,21 @@ public class ClientScript : MonoBehaviour
 
     }
 
-    private void OnIncomingData(string data)
+    private void OnIncomingData(ClientMessage message)
     {
-
-
         //Debug.Log("Server :"+data);
+        if (message.messageContent.ToString() != null)
+        {
+            if (message.messageContent.ToString() == "%NAME")
+            {
 
-        if (data == "%NAME") {
+                Send("&NAME|" + clientName);
+                return;
 
-            Send("&NAME|"+ clientName);
-            return;
-
-                }
-       GameObject go = Instantiate(messagePrefab, chatContainer.transform);
-        go.GetComponentInChildren<TextMeshProUGUI>().text = data; // Potential error Textmesh pro is type Text?
+            }
+        }
+        GameObject go = Instantiate(messagePrefab, chatContainer.transform);
+        go.GetComponentInChildren<TextMeshProUGUI>().text = message.messageContent.ToString(); // Potential error Textmesh pro is type Text?
 
     }
 
@@ -109,8 +106,10 @@ public class ClientScript : MonoBehaviour
             return;
         else
         {
-            writer.WriteLine(data);
-            writer.Flush();
+            var message = new ClientMessage();//new struct unfilled with data
+            message.messageContent = data; // defining properties:
+            message.clientName = clientName;
+            SerializeMessage(stream, message); // Serialize message
 
 
         }
@@ -148,8 +147,6 @@ public class ClientScript : MonoBehaviour
         if (!socketReady)
             return;
 
-        writer.Close();
-        reader.Close();
         socket.Close();
         socketReady = false;
 
@@ -158,12 +155,57 @@ public class ClientScript : MonoBehaviour
     private void OnApplicationQuit()
     {
 
-
         CloseSocket();
     }
     private void OnDisable()
     {
         CloseSocket();
+    }
+
+    public struct ClientMessage // struct to serialize when sending a message. 
+    {
+        public string messageContent;
+        public string clientName;
+        //color
+    }
+
+    public void SerializeMessage(Stream stream, ClientMessage message)
+    {
+        XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+
+        clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
+
+    }
+
+    public ClientMessage DeserializeMessage(Stream stream)
+    {
+        TextReader textReader = new StreamReader(stream);
+        string longString = string.Empty;
+        while (true)
+        {
+            string s = string.Empty;
+            try
+            {
+                s = textReader.ReadLine();
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Error reading string:" + e.Message);
+                break;
+            }
+            if (s == null)
+                break;
+
+            longString = longString + s;
+
+            if (s.Contains("clientName")) // name is the last parameter so it is the end of the class (last line to read)
+                break;
+
+        }
+        longString = longString + "</ClientMessage>"; //I don't know why the last line pops an error so i'll add it myself
+
+        XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
+        return (ClientMessage)serializer.Deserialize(new StringReader(longString));
     }
 
 }

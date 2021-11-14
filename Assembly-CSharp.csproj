@@ -64,6 +64,9 @@
     <Compile Include="Assets\Scenes\Deliveries\Delivery 1 scripts\ObjectAbility.cs" />
     <Compile Include="Assets\Prototype Assets\Scripts\CameraScript.cs" />
     <Compile Include="Assets\Prototype Assets\Scripts\PlaceHolderMOVEMENT.cs" />
+    <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\ClearBehaviour.cs" />
+    <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\SMBehaviour.cs" />
+    <Compile Include="Assets\Scenes\Deliveries\Delivery 3 GameChat\ChatMenu.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\Thirdparty\TextMesh Pro\Shaders\TMPro.cginc" />
