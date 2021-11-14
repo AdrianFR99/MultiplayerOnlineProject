@@ -14,6 +14,8 @@ public class ClientScript : MonoBehaviour
 
     public GameObject chatContainer;
     public GameObject messagePrefab;
+    public GameObject ServerContainer;
+    public GameObject SMPrefab;
     public string clientName; 
 
     private bool socketReady;
@@ -31,9 +33,10 @@ public class ClientScript : MonoBehaviour
         //Default host / prot values
         string host = "127.0.0.1";
         int port = 9050;
+        clientName = "Guest";
 
         //Overwrite default host/port values
-       // OverwriteDefValues(host, port);
+        OverwriteDefValues(host, port);
 
 
         try
@@ -84,16 +87,32 @@ public class ClientScript : MonoBehaviour
         //Debug.Log("Server :"+data);
         if (message.messageContent.ToString() != null)
         {
-            if (message.messageContent.ToString() == "%NAME")
+            if (message.messageContent.ToString().Contains("%NAME"))
             {
 
                 Send("&NAME|" + clientName);
-                return;
+               
+
+            }
+            else if (message.messageContent.ToString().Contains("$SM|"))
+            {
+
+                message.messageContent = message.messageContent.ToString().Split('|')[1];
+                GameObject goSM = Instantiate(SMPrefab, ServerContainer.transform);
+                goSM.GetComponentInChildren<TextMeshProUGUI>().text = message.messageContent;
+               
+
+
+            }
+            else
+            {
+
+                GameObject go = Instantiate(messagePrefab, chatContainer.transform);
+                go.GetComponentInChildren<TextMeshProUGUI>().text = message.messageContent.ToString();
 
             }
         }
-        GameObject go = Instantiate(messagePrefab, chatContainer.transform);
-        go.GetComponentInChildren<TextMeshProUGUI>().text = message.messageContent.ToString(); // Potential error Textmesh pro is type Text?
+       
 
     }
 
@@ -130,13 +149,17 @@ public class ClientScript : MonoBehaviour
 
         string h;
         int p;
-
-        h = GameObject.Find("HostInput").GetComponent<InputField>().text;
+        string n;
+        h = GameObject.Find("HostInput").GetComponent<TMP_InputField>().text;
         if (h != "")
             s = h;
-        int.TryParse(GameObject.Find("PortInput").GetComponent<InputField>().text, out p);
+        int.TryParse(GameObject.Find("PortInput").GetComponent<TMP_InputField>().text, out p);
         if (p != 0)
-           i = p;
+            i = p;
+
+        n = GameObject.Find("UserName").GetComponent<TMP_InputField>().text;
+        if (n != "")
+            clientName = n;
 
 
 

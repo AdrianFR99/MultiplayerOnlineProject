@@ -23,7 +23,8 @@ namespace GameServer
         public int port = 9050; // Port 
         private TcpListener server; // Tcp Listener listens for incoming connection to the server
         private bool serverStarted;
-        
+
+        string SMstring = "$SM|";
 
         public void startServer()
         {
@@ -93,7 +94,7 @@ namespace GameServer
 
            for(int i=0; i < disconnectList.Count - 1; i++){
 
-                Broadcast(disconnectList[i].clientName + "has disconnected",clients);
+                Broadcast(SMstring+disconnectList[i].clientName + "has disconnected",clients);
 
                 clients.Remove(disconnectList[i]);
                 disconnectList.RemoveAt(i);
@@ -113,7 +114,7 @@ namespace GameServer
                 {
 
                     c.clientName = message.messageContent.Split('|')[1];
-                    Broadcast(c.clientName + " has connected", clients);
+                    Broadcast(SMstring+c.clientName + " has connected", clients);
                     return;
                 }
                 Broadcast(c.clientName + ":" + message.messageContent.ToString(), clients);
