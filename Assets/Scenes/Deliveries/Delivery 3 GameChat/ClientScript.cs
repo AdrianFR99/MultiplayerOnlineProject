@@ -54,50 +54,18 @@ public class ClientScript : MonoBehaviour
         }
     }
 
-
     private void Update()
     {
-
         if (socketReady)
         {
             if (stream.DataAvailable)
             {
-                TextReader textReader = new StreamReader(stream);
-                string longString = string.Empty;
-                while (true)
-
-                {
-                    string s = string.Empty;
-                    try
-                    {
-                        s = textReader.ReadLine();
-                    }
-                    catch(Exception e)
-                    {
-                        Debug.Log("Error reading string:" + e.Message);
-                        break;
-                    }
-                    if (s == null) 
-                        break;
-
-                    longString = longString + s;
-
-                    if (s.Contains("clientName")) // name is the last parameter so it is the end of the class (last line to read)
-                        break;
-
-                }
-                longString = longString + "</ClientMessage>"; //I don't know why the last line pops an error so i'll add it myself
-                
                 var message = new ClientMessage();
-                XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
-                message = (ClientMessage)serializer.Deserialize(new StringReader(longString));
+                message = DeserializeMessage(stream);
 
                 OnIncomingData(message);
             }
         }
-
-
-
     }
 
     private void OnIncomingData(ClientMessage message)
@@ -131,11 +99,10 @@ public class ClientScript : MonoBehaviour
             message.messageContent = data;
             message.clientName = clientName;
 
-            TextWriter textWriter = new StreamWriter(stream);
+           // XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+           // clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
 
-            XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
-
-            clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
+            SerializeMessage(stream, message);
         }
 
     }
@@ -186,6 +153,44 @@ public class ClientScript : MonoBehaviour
     private void OnDisable()
     {
         CloseSocket();
+    }
+
+    public void SerializeMessage(Stream stream, ClientMessage message)
+    {
+        XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+
+        clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
+
+    }
+    public ClientMessage DeserializeMessage(Stream stream)
+    {
+        TextReader textReader = new StreamReader(stream);
+        string longString = string.Empty;
+        while (true)
+        {
+            string s = string.Empty;
+            try
+            {
+                s = textReader.ReadLine();
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Error reading string:" + e.Message);
+                break;
+            }
+            if (s == null)
+                break;
+
+            longString = longString + s;
+
+            if (s.Contains("clientName")) // name is the last parameter so it is the end of the class (last line to read)
+                break;
+
+        }
+        longString = longString + "</ClientMessage>"; //I don't know why the last line pops an error so i'll add it myself
+
+        XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
+        return (ClientMessage)serializer.Deserialize(new StringReader(longString));
     }
 
     public class ServerClient // we need this class to store a list of clients, who are those which are connected 

@@ -75,47 +75,14 @@ namespace GameServer
                     NetworkStream stream = clients[i].tcp.GetStream();
                     if (stream.DataAvailable)
                     {
-
-                        //decode data comming from the user
-                        
-                        TextReader textReader = new StreamReader(stream);
-                        string longString = string.Empty; //string for unserialized data
-
-                        while (true)
-
-                        {
-                            string s = string.Empty;
-                            try
-                            {
-                                s = textReader.ReadLine();
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine("Error reading string:" + e.Message);
-                                break;
-                            }
-                            if (s == null)
-                                break;
-
-                            longString = longString + s;
-
-                            if (s.Contains("clientName")) // name is the last parameter so it is the end of the class (last line to read)
-                                break;
-                        }
-
-                        longString = longString + "</ClientMessage>"; //I don't know why the last line pops an error so i'll add it myself
-
-                        var message = new ClientMessage();
-                        XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
-                        message = (ClientMessage)serializer.Deserialize(new StringReader(longString));
+                        var message = new ClientMessage();                        
+                        message = DeserializeMessage(stream);
 
                         Console.WriteLine(message.messageContent.ToString());
                             //Process recieved data 
                         OnIncomingData(clients[i], message);
-                        
+                       
                     }
-
-
 
                 }
 
@@ -218,12 +185,7 @@ namespace GameServer
                     message.messageContent = data;
                     message.clientName = c.clientName;
 
-                    TextWriter textWriter = new StreamWriter(stream);
-
-                    XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
-
-                    clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
-                
+                    SerializeMessage(stream, message);
                 }
                 catch (Exception e)
                 {
@@ -245,7 +207,45 @@ namespace GameServer
         }
 
         public bool GetServerStatus() { return serverStarted; }
+        public void SerializeMessage(Stream stream, ClientMessage message)
+        {
+            XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+
+            clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
+
+        }
+        public ClientMessage DeserializeMessage(Stream stream)
+        {
+            TextReader textReader = new StreamReader(stream);
+            string longString = string.Empty;
+            while (true)
+            {
+                string s = string.Empty;
+                try
+                {
+                    s = textReader.ReadLine();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error reading string:" + e.Message);
+                    break;
+                }
+                if (s == null)
+                    break;
+
+                longString = longString + s;
+
+                if (s.Contains("clientName")) // name is the last parameter so it is the end of the class (last line to read)
+                    break;
+
+            }
+            longString = longString + "</ClientMessage>"; //I don't know why the last line pops an error so i'll add it myself
+
+            XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
+            return (ClientMessage)serializer.Deserialize(new StringReader(longString));
+        }
     }
+   
 
     public class ServerClient // we need this class to store a list of clients, who are those which are connected 
     {
