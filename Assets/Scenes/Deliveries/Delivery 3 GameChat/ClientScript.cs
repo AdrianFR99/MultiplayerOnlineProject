@@ -19,8 +19,7 @@ public class ClientScript : MonoBehaviour
     private bool socketReady;
     private TcpClient socket;
     private NetworkStream stream;
-    //private StreamWriter writer;
-    //private StreamReader reader;
+    private string endLine = "</endLine>";
 
     public void ConnectToServer()
     {
@@ -64,54 +63,86 @@ public class ClientScript : MonoBehaviour
         {
 
 
+            //if (stream.DataAvailable)
+            //{
+            //    try
+            //    {
+            //        //decode data comming from the user
+            //        var message = new ClientMessage();
+
+            //        XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+            //        message = (ClientMessage)clientMessageSerializer.Deserialize(stream);
+            //        string data = message.messageContent.ToString();
+
+            //        if(data != null)
+            //        {
+
+            //            OnIncomingData(data);
+
+            //        }
+            //    }
+            //    catch (Exception e)
+            //    {
+
+            //        Debug.Log("Deserialization error:" + e.Message);
+
+            //    }
+            //}
+
             if (stream.DataAvailable)
             {
-                try
+                TextReader textReader = new StreamReader(stream);
+                string longString = string.Empty; ;
+
+                while (true)
+
                 {
-                    //decode data comming from the user
-                    var message = new ClientMessage();
-
-                    XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
-
-                    message = (ClientMessage)clientMessageSerializer.Deserialize(stream);
-                    string data = message.messageContent.ToString();
-                    
-                    if(data != null)
+                    string s = string.Empty;
+                    try
                     {
-                    
-                        OnIncomingData(data);
-                    
+                        s = textReader.ReadLine();
                     }
-                }
-                catch (Exception e)
-                {
+                    catch(Exception e)
+                    {
+                        Debug.Log("Error reading string:" + e.Message);
+                    }
+                    if (s == null) 
+                        break;
 
-                    Debug.Log("Deserialization error:" + e.Message);
+                    longString = longString + s;
 
+                    //identify lastString of the message
+                    if (s.Contains("clientName")) // name is the last parameter so it is the end of the class (last line to read)
+                        break; 
                 }
+
+                var message = new ClientMessage();
+                XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
+                message = (ClientMessage)serializer.Deserialize(new StringReader(longString));
+
+                OnIncomingData(message);
             }
-
-
         }
 
 
 
     }
 
-    private void OnIncomingData(string data)
+    private void OnIncomingData(ClientMessage message)
     {
-
-
         //Debug.Log("Server :"+data);
+        if (message.messageContent.ToString() != null)
+        {
+            if (message.messageContent.ToString() == "%NAME")
+            {
 
-        if (data == "%NAME") {
+                Send("&NAME|" + clientName);
+                return;
 
-            Send("&NAME|"+ clientName);
-            return;
-
-                }
+            }
+        }
        GameObject go = Instantiate(messagePrefab, chatContainer.transform);
-        go.GetComponentInChildren<TextMeshProUGUI>().text = data; // Potential error Textmesh pro is type Text?
+        go.GetComponentInChildren<TextMeshProUGUI>().text = message.messageContent.ToString(); // Potential error Textmesh pro is type Text?
 
     }
 
@@ -128,10 +159,13 @@ public class ClientScript : MonoBehaviour
             message.messageContent = data;
             message.clientName = clientName;
 
+            TextWriter textWriter = new StreamWriter(stream);
+
             XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
 
             clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
 
+            textWriter.WriteLine(endLine); //custom end to allow the reader identify the end of the class
         }
 
     }

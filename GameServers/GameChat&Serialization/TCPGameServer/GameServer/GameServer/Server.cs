@@ -24,7 +24,7 @@ namespace GameServer
         public int port = 9050; // Port 
         private TcpListener server; // Tcp Listener listens for incoming connection to the server
         private bool serverStarted;
-        
+        private string endLine = "</endLine>";
 
         public void startServer()
         {
@@ -78,20 +78,28 @@ namespace GameServer
                     {
 
                         //decode data comming from the user
-                        var message = new ClientMessage();
+                        
+                        TextReader textReader = new StreamReader(stream);
+                        string longString = string.Empty; //string for unserialized data
 
-                        XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+                        while (true)
 
-                        message = (ClientMessage)clientMessageSerializer.Deserialize(stream);
-                        string data = message.messageContent.ToString();
-                        Console.WriteLine(data);
-
-                        if (data != null)
                         {
-                            //Process recieved data 
-                            OnIncomingData(clients[i], data);
+                            string s = textReader.ReadLine();
 
+                            if (s == null) throw new Exception("Socket closed");
+
+                            longString = longString + s;
+
+                            if (s == endLine) break; //identify lastString of the message
                         }
+                        var message = new ClientMessage();
+                        XmlSerializer serializer = new XmlSerializer(typeof(ClientMessage));
+                        message = (ClientMessage)serializer.Deserialize(new StringReader(longString));
+
+                        Console.WriteLine(message.messageContent.ToString());
+                            //Process recieved data 
+                        OnIncomingData(clients[i], message);
                         
                     }
 
@@ -112,20 +120,18 @@ namespace GameServer
 
         }
 
-        private void OnIncomingData(ServerClient c, string data)
+        private void OnIncomingData(ServerClient c, ClientMessage message)
         {
-
-
             //  Console.WriteLine(c.clientName + "has sent the following message:" + data);
 
-            if (data.Contains("&NAME"))
+            if (message.messageContent.Contains("&NAME"))
             {
 
-                c.clientName = data.Split('|')[1];
+                c.clientName = message.messageContent.Split('|')[1];
                 Broadcast(c.clientName + " has connected" , clients);
                 return;
             }
-            Broadcast(c.clientName+":"+data, clients);
+            Broadcast(c.clientName+":"+ message.messageContent.ToString(), clients);
 
 
         }
@@ -200,11 +206,15 @@ namespace GameServer
                     message.messageContent = data;
                     message.clientName = c.clientName;
 
-                    //XmlSerializer clientMessageSerializer declared at the beginning
+                    TextWriter textWriter = new StreamWriter(stream);
+
                     XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+
                     clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
+
+                    textWriter.WriteLine(endLine); //custom end to allow the reader identify the end of the class
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Console.WriteLine("Write error :" + e.Message + "To client "+ c.clientName);
 
