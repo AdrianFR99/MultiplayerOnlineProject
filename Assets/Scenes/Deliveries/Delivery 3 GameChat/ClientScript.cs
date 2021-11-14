@@ -208,4 +208,12 @@ public class ClientScript : MonoBehaviour
         return (ClientMessage)serializer.Deserialize(new StringReader(longString));
     }
 
+
+    public bool getSocketStatus()
+    {
+        return socketReady;
+
+
+    }
+
 }

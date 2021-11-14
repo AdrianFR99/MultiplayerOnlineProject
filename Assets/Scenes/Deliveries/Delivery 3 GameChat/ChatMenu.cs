@@ -11,15 +11,15 @@ public class ChatMenu : MonoBehaviour
 
    public void logIn()
     {
-       
-
-        //if (serverStatusGO.GetComponent<ClientScript>().getSocketStatus())
-        //{
-        //    UI.SetActive(true);
-        //    gameObject.SetActive(false);
 
 
-        //}
+        if (serverStatusGO.GetComponent<ClientScript>().getSocketStatus())
+        {
+            UI.SetActive(true);
+            gameObject.SetActive(false);
+
+
+        }
 
 
 
