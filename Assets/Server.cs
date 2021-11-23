@@ -13,6 +13,8 @@ using System.Threading;
 using System.IO;
 using System.Xml.Serialization;
 
+using UnityEngine.Networking;
+
 public class Server : MonoBehaviour
 {
 
@@ -20,7 +22,15 @@ public class Server : MonoBehaviour
     private List<ServerClient> disconnectList;
 
     public int port = 9050; // Port 
-    private TcpListener server; // Tcp Listener listens for incoming connection to the server
+    public int otherClientPort = 9090; //For now we are using another local client (A replica of this)
+
+    UdpClient client; //UdpClient for this specific client, its port is set as the public port variable
+
+    IPEndPoint clientIP; //Initialize this UdpClient with this IPEndPoint
+    IPEndPoint otherClientIP;
+
+    string host = "127.0.0.1";
+
     private bool serverStarted;
 
     string SMstring = "$SM|";
@@ -32,18 +42,23 @@ public class Server : MonoBehaviour
     {
         clients = new List<ServerClient>();
         disconnectList = new List<ServerClient>();
+
         try
         {
 
-            server = new TcpListener(IPAddress.Any, port);
-            server.Start(); //The Start method initializes the underlying Socket, binds it to a local endpoint, and listens for incoming connection attempts https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener.start?view=net-5.0
+            clientIP = new IPEndPoint(IPAddress.Any,port);
+            client = new UdpClient(port); //This binds the IPEndPoint
 
-            StartListening(); //Start async operations to accept connections 
             serverStarted = true; //set bool 
 
-            Console.WriteLine("Server Started Succesfully" + "On port:" + port.ToString());
-
             commands = new Commands();
+
+            // For now we add the local client we have in another scene
+            otherClientIP = new IPEndPoint(IPAddress.Parse(host),otherClientPort); 
+            ServerClient localClient = new ServerClient(new UdpClient(otherClientIP));
+            localClient.ip = otherClientIP;
+            clients.Add(localClient);
+
         }
         catch (Exception e)
         {
@@ -63,9 +78,9 @@ public class Server : MonoBehaviour
         {
 
 
-            if (!Isconnected(clients[i].tcp))// check if the client is connected if not:
+            if (!Isconnected(clients[i].udpClient))// check if the client is connected if not:
             {
-                clients[i].tcp.Close();
+                clients[i].udpClient.Close();
                 disconnectList.Add(clients[i]);
                 continue;
 
@@ -73,18 +88,8 @@ public class Server : MonoBehaviour
             else// if connected then 
             {
 
-                NetworkStream stream = clients[i].tcp.GetStream();
-                if (stream.DataAvailable)
-                {
-
-                    var message = new ClientMessage();//Created struct to deserialize 
-                    message = DeserializeMessage(stream);
-
-                    Console.WriteLine(message.messageContent.ToString());
-                    //Process recieved data 
-                    OnIncomingData(clients[i], message);
-
-                }
+                //Check with a poll if clients have sent anything and process the info (Maybe we just need to check for this specific's client message)
+                
 
 
 
@@ -141,18 +146,18 @@ public class Server : MonoBehaviour
 
     }
 
-    private bool Isconnected(TcpClient tcp)  // tip: TcpClient.Client equal to the socket
+    private bool Isconnected(UdpClient udpClient)  // tip: TcpClient.Client equal to the socket
     {
 
         try// maybe we are not able to reach a client 
         {
 
-            if (tcp != null && tcp.Client != null && tcp.Client.Connected)//tcp is null means the TcpClient does not have any data assigned // if tcp.client is different from null then we have a socket connected// and tcp.Client.Connected is true when the client is connected thorugh a remote resource since the last operation 
+            if (udpClient != null && udpClient.Client != null && udpClient.Client.Connected)//tcp is null means the TcpClient does not have any data assigned // if tcp.client is different from null then we have a socket connected// and tcp.Client.Connected is true when the client is connected thorugh a remote resource since the last operation 
             {
 
-                if (tcp.Client.Poll(0, SelectMode.SelectRead))//The Poll method checks the state of the Socket. IMPORTANT Poll first paramenter is the time to wait for a respons in MICROSECONDS https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.poll?view=net-5.0
+                if (udpClient.Client.Poll(0, SelectMode.SelectRead))//The Poll method checks the state of the Socket. IMPORTANT Poll first paramenter is the time to wait for a respons in MICROSECONDS https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.poll?view=net-5.0
                 {
-                    return !(tcp.Client.Receive(new byte[1], SocketFlags.Peek) == 0);   // if the signal sent is not zero (meaning the client wants to disconnect)then send true  
+                    return !(udpClient.Client.Receive(new byte[1], SocketFlags.Peek) == 0);   // if the signal sent is not zero (meaning the client wants to disconnect)then send true  
 
                 }
                 return true;
@@ -173,28 +178,6 @@ public class Server : MonoBehaviour
 
     }
 
-    private void StartListening()
-    {
-        server.BeginAcceptTcpClient(AcceptTcpClient, server);//Begins an asynchronous operation to accept an incoming connection attempt.
-                                                             //IMPORTANT AcceptTcpClient BLOCKS
-    }
-
-    private void AcceptTcpClient(IAsyncResult ar) //AsyncCallback to store clients in lists, 
-    {
-
-        TcpListener listener = (TcpListener)ar.AsyncState; //This property returns the object that is the last parameter of the method that initiates an asynchronous operation.
-
-        clients.Add(new ServerClient(listener.EndAcceptTcpClient(ar)));//EndAcceptTcpClient End asynchronous operation 
-        StartListening();//once a client has been accepted then we wait for another conncetion 
-
-
-        // Here we should display a connection in the chat, e.j. Adrián has connected
-
-        //Broadcast(clients[clients.Count-1].clientName + "has connected",clients);
-        Broadcast("%NAME", new List<ServerClient>() { clients[clients.Count - 1] }); // IMPROVE We should create overload for broadcasting
-
-    }
-
     internal void Broadcast(string data, List<ServerClient> clientL)
     {
 
@@ -204,14 +187,15 @@ public class Server : MonoBehaviour
             try
             {
                 //get client stream
-                NetworkStream stream = c.tcp.GetStream();
+                //NetworkStream stream = c.udpClient.GetStream();
                 //data passed as an argument to Broadcast()
                 //encode data to send to the user
                 var message = new ClientMessage();
                 message.messageContent = data;
                 message.clientName = c.clientName;
 
-                SerializeMessage(stream, message);
+                byte[] tmp = SerializeMessage(message);
+                client.Send(tmp,tmp.Length,c.ip); //Send message to this client
 
 
             }
@@ -227,19 +211,22 @@ public class Server : MonoBehaviour
     internal void Broadcast(string data, ServerClient c)
     {
 
-
-
         try
         {
             //get client stream
-            NetworkStream stream = c.tcp.GetStream();
+            //NetworkStream stream = c.tcp.GetStream();
             //data passed as an argument to Broadcast()
             //encode data to send to the user
-            var message = new ClientMessage();
-            message.messageContent = data;
-            message.clientName = c.clientName;
 
-            SerializeMessage(stream, message);
+            for(int i =0; i<clients.Count;i++)
+            {
+                ClientMessage message = new ClientMessage();
+                message.messageContent = data;
+                message.clientName = c.clientName;
+
+                SerializeMessage(message);
+            }
+            
 
 
         }
@@ -260,15 +247,15 @@ public class Server : MonoBehaviour
         //We disconnect each client
         foreach (ServerClient sc in clients)
         {
-            sc.tcp.Close();
-            disconnectList.Add(sc);
+            //sc.tcp.Close();
+            //disconnectList.Add(sc);
 
         }
         clients.Clear();
 
         Console.WriteLine("clients disconnocted from server");
 
-        server.Stop();
+        //server.Stop();
         serverStarted = false;
         Console.WriteLine("Server conncetion closed");
 
@@ -280,12 +267,12 @@ public class Server : MonoBehaviour
     public bool GetServerStatus() { return serverStarted; }
 
 
-    public void SerializeMessage(Stream stream, ClientMessage message)
+    byte[] SerializeMessage(ClientMessage message)
     {
-        XmlSerializer clientMessageSerializer = new XmlSerializer(typeof(ClientMessage));
+        
+        string tmp = JsonUtility.ToJson(message);
 
-        clientMessageSerializer.Serialize(stream, message); //From what i understand, this method serializes the data and uses the stream to send it
-
+        return Encoding.ASCII.GetBytes(tmp);
     }
 
     public ClientMessage DeserializeMessage(Stream stream)
@@ -396,13 +383,14 @@ class Commands : Server
 
 public class ServerClient // we need this class to store a list of clients, who are those which are connected 
 {
-    public TcpClient tcp; //socket assignation 
+    public UdpClient udpClient; //socket assignation 
+    public IPEndPoint ip; //IPEndPoint of each client
     public string clientName;// client name
 
-    public ServerClient(TcpClient clientSocket)//contructor where we define the client name and the tcp socket 
+    public ServerClient(UdpClient clientSocket)//contructor where we define the client name and the tcp socket 
     {
         clientName = "Guest";
-        tcp = clientSocket;
+        udpClient = clientSocket;
     }
 
 
